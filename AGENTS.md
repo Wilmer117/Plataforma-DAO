@@ -20,6 +20,8 @@ Lee `CONTEXTO.md` completo antes de proponer o realizar cambios. Ese archivo def
 - Solo Call Center escoge la droguería al publicar un pedido.
 - Aceptar un pedido debe ser una operación atómica: el primero se lo queda.
 - Si un domiciliario libera un pedido, no vuelve a ofrecerse a otros; queda visible para Central como retrasado.
+- El Domiciliario puede conectarse o desconectarse para controlar la recepción de nuevas ofertas. No asumir qué pasa con pedidos ya aceptados al desconectarse; revisar `CONTEXTO.md`.
+- La app móvil del Domiciliario es Android nativa en Kotlin y se distribuirá en Google Play; no sustituirla por una PWA.
 - Los cambios de pedido deben registrar hora y usuario.
 - Las metas son de cantidad de entregas; solo Administrador las define.
 - No decidir por cuenta propia los asuntos listados como pendientes en `CONTEXTO.md`.

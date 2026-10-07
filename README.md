@@ -9,7 +9,7 @@ Plataforma para coordinar droguerías, Call Center, Central de operación y domi
 - **Central:** consulta y edita todos los pedidos, cancela, reasigna pedidos retrasados y recibe alertas.
 - **Droguería:** publica pedidos de su propio establecimiento y consulta únicamente sus pedidos.
 - **Call Center:** publica pedidos, elige la droguería de recogida y consulta todos los pedidos.
-- **Domiciliario:** usa una PWA móvil para aceptar pedidos disponibles, llevar varios a la vez, liberar o entregar pedidos y consultar su meta diaria.
+- **App móvil Android del Domiciliario:** aplicación nativa desarrollada en Kotlin para conectarse, recibir nuevos pedidos y gestionar las entregas. Se distribuirá en Google Play.
 
 El MVP incluye el flujo de pedidos, estados en tiempo real, historial de cambios, semáforo de retraso, metas por cantidad y control de acceso por rol. GPS, mapas, optimización de rutas, notificaciones push con la aplicación cerrada y otras funciones avanzadas quedan para una fase posterior.
 
@@ -17,7 +17,7 @@ El MVP incluye el flujo de pedidos, estados en tiempo real, historial de cambios
 
 - Next.js (App Router), TypeScript y Tailwind CSS.
 - Supabase: PostgreSQL, Auth, Realtime y Row Level Security (RLS), con `@supabase/supabase-js` y `@supabase/ssr`.
-- PWA para domiciliarios; Capacitor solo se evaluará más adelante si se requiere acceso nativo a GPS o notificaciones.
+- Aplicación Android nativa para el Domiciliario, desarrollada en Kotlin y con distribución prevista en Google Play.
 - Despliegue previsto en Vercel y código en GitHub.
 
 No se deben cambiar estas tecnologías ni agregar dependencias sin explicar la razón y pedir autorización.

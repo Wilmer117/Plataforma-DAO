@@ -5,7 +5,7 @@
 La plataforma conecta droguerías, un Call Center, una Central de operación y domiciliarios para coordinar pedidos en tiempo real y reemplazar llamadas y mensajes manuales.
 
 - **Web:** Administrador, Gerente, Central, Droguería y Call Center.
-- **Celular:** el Domiciliario trabaja desde una PWA instalable.
+- **Aplicación móvil del Domiciliario:** app nativa para Android, desarrollada en Kotlin y destinada a distribuirse en Google Play. La PWA queda descartada para este rol. La app permite al domiciliario conectarse, recibir pedidos y gestionar sus entregas.
 
 ## 2. Roles y permisos
 
@@ -16,7 +16,7 @@ La plataforma conecta droguerías, un Call Center, una Central de operación y d
 | Central (Central 1 y Central 2) | Web | Ve todos los pedidos; puede editar mensajero, precio, barrio y dirección; cancelar y reasignar pedidos retrasados; recibe alertas. |
 | Droguería | Web | Publica pedidos de su propia droguería, ve solo sus pedidos y recibe notificación cuando se entregan. |
 | Call Center | Web | Publica pedidos, elige a qué droguería asignarlos, ve todos los pedidos y recibe notificación cuando se entregan. Es el único rol que elige la droguería al publicar. |
-| Domiciliario | PWA móvil | Ve pedidos pendientes disponibles, acepta pedidos, lleva varios a la vez, libera pedidos, marca entregas y consulta su meta y ganancias. |
+| Domiciliario | App nativa Android (Kotlin) | Puede conectarse y desconectarse para controlar si recibe nuevas ofertas; además acepta pedidos, lleva varios a la vez, libera pedidos, marca entregas y consulta su meta y ganancias. |
 
 ## 3. Flujo de un pedido (MVP)
 
@@ -32,11 +32,15 @@ La plataforma conecta droguerías, un Call Center, una Central de operación y d
 
 Estados: `pendiente → aceptado → en_entrega → entregado`, además de `cancelado`, `retrasado` y `externo`.
 
+### Disponibilidad del domiciliario
+
+El Domiciliario puede conectarse para aparecer disponible y recibir nuevas ofertas, o desconectarse para dejar de recibirlas. Qué ocurre con los pedidos que ya aceptó cuando se desconecta queda pendiente de definir; no se debe asumir que se cancelan o liberan automáticamente.
+
 ## 4. Reglas del MVP
 
 ### Retrasos y alertas
 
-El semáforo se calcula con `created_at`; no se almacena como dato independiente. Las bandas definidas son verde (0–3 minutos), verde claro (3–5), naranja (5–10) y rojo (desde 10 minutos). Se muestra en web y en la PWA. Cuando el pedido lleva cinco minutos en rojo (minuto 15), Central recibe una alerta para asignarlo con urgencia.
+El semáforo se calcula con `created_at`; no se almacena como dato independiente. Las bandas definidas son verde (0–3 minutos), verde claro (3–5), naranja (5–10) y rojo (desde 10 minutos). Se muestra en la web y en la app nativa Android del Domiciliario. Cuando el pedido lleva cinco minutos en rojo (minuto 15), Central recibe una alerta para asignarlo con urgencia.
 
 ### Metas
 
@@ -48,12 +52,13 @@ Los cambios de estado se reflejan en pantalla con Supabase Realtime. Cada cambio
 
 ## 5. Fuera del MVP
 
-Se reserva para una fase posterior: GPS y mapas, asignación por zona, regla del 25 % de apoyo en pedidos rojos, deudas del domiciliario con plazo de 4 horas, reportes avanzados, 2FA, auditoría avanzada, notificaciones push con la aplicación cerrada, publicación en tiendas, optimización de rutas y calificaciones.
+Se reserva para una fase posterior: GPS y mapas, asignación por zona, regla del 25 % de apoyo en pedidos rojos, deudas del domiciliario con plazo de 4 horas, reportes avanzados, 2FA, auditoría avanzada, notificaciones push con la aplicación cerrada, optimización de rutas y calificaciones.
 
 ## 6. Pendientes por definir
 
 - Si se paga al domiciliario cuando el cliente cancela estando ya en camino.
 - El límite máximo de tiempo en rojo antes de una acción automática adicional.
+- Qué ocurre con los pedidos ya aceptados si el Domiciliario se desconecta.
 
 No inventar una regla para estos puntos: documentar la decisión cuando el responsable del proyecto la defina.
 
@@ -62,7 +67,7 @@ No inventar una regla para estos puntos: documentar la decisión cuando el respo
 - Next.js (App Router), TypeScript y Tailwind CSS.
 - Supabase: PostgreSQL, Auth, Realtime y Row Level Security (RLS).
 - Cliente Supabase con `@supabase/supabase-js` y `@supabase/ssr`.
-- PWA para el domiciliario. Si más adelante hace falta GPS o push nativo, se evaluará Capacitor.
+- App nativa Android del Domiciliario desarrollada en Kotlin y distribuida en Google Play.
 - Despliegue en Vercel y código en GitHub.
 
 No cambiar el stack sin consultar. No agregar librerías o tecnologías nuevas sin explicar por qué y pedir autorización.
@@ -80,7 +85,7 @@ La seguridad se aplica con RLS para que cada rol acceda solo a los datos permiti
 - Panel de Central: pedidos, edición, cancelación, retrasos, reasignación, alertas e historial.
 - Portal de Droguería: publicar pedidos propios y consultar su estado.
 - Portal de Call Center: publicar pedidos, escoger droguería y consultar todos los pedidos.
-- PWA de Domiciliario: disponibles, aceptación, entregas, liberación y progreso de meta.
+- App nativa Android del Domiciliario (Kotlin): conectarse/desconectarse, pedidos disponibles, aceptación, entregas, liberación y progreso de meta.
 - Capa de datos Supabase: persistencia, funciones atómicas, RLS y Realtime.
 
 ## 10. Estado actual
