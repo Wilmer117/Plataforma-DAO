@@ -1,6 +1,6 @@
 # Instrucciones para colaboradores y asistentes
 
-Lee `CONTEXTO.md` completo antes de proponer o realizar cambios. Ese archivo define los roles, permisos, flujo de pedidos, alcance del MVP y stack del proyecto.
+Lee `CONTEXTO.md` completo antes de proponer o realizar cambios. Revisa también `docs/decisiones/dudas-y-decisiones.md` cuando una decisión esté pendiente o haya contradicciones entre documentos. Los acuerdos vigentes del contexto y del registro de decisiones prevalecen sobre descripciones antiguas; las propuestas aún no aprobadas no son reglas.
 
 ## Forma de trabajar
 
@@ -19,9 +19,9 @@ Lee `CONTEXTO.md` completo antes de proponer o realizar cambios. Ese archivo def
 - Solo Central y Administrador cancelan pedidos.
 - Solo Call Center escoge la droguería al publicar un pedido.
 - Aceptar un pedido debe ser una operación atómica: el primero se lo queda.
-- Si un domiciliario libera un pedido, no vuelve a ofrecerse a otros; queda visible para Central como retrasado.
+- Si un domiciliario libera un pedido antes de recogerlo, vuelve a estar disponible y se reinicia `disponible_desde`. Después de recogerlo, el domiciliario contacta a Central; no liberar automáticamente.
 - El Domiciliario puede conectarse o desconectarse para controlar la recepción de nuevas ofertas. No asumir qué pasa con pedidos ya aceptados al desconectarse; revisar `CONTEXTO.md`.
 - La app móvil del Domiciliario es Android nativa en Kotlin y se distribuirá en Google Play; no sustituirla por una PWA.
 - Los cambios de pedido deben registrar hora y usuario.
 - Las metas son de cantidad de entregas; solo Administrador las define.
-- No decidir por cuenta propia los asuntos listados como pendientes en `CONTEXTO.md`.
+- No decidir por cuenta propia los asuntos listados como pendientes en `CONTEXTO.md` o `docs/decisiones/dudas-y-decisiones.md`.

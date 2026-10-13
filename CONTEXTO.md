@@ -1,96 +1,89 @@
 # Contexto del proyecto — Plataforma de Gestión de Domicilios
 
-## 1. Propósito y usuarios
+## Propósito
 
-La plataforma conecta droguerías, un Call Center, una Central de operación y domiciliarios para coordinar pedidos en tiempo real y reemplazar llamadas y mensajes manuales.
+Conectar droguerías, Call Center, Central y domiciliarios para coordinar pedidos en tiempo real.
 
-- **Web:** Administrador, Gerente, Central, Droguería y Call Center.
-- **Aplicación móvil del Domiciliario:** app nativa para Android, desarrollada en Kotlin y destinada a distribuirse en Google Play. La PWA queda descartada para este rol. La app permite al domiciliario conectarse, recibir pedidos y gestionar sus entregas.
+- Web: Administrador, Central, Call Center y Droguería.
+- App del Domiciliario: Android nativa con Kotlin.
+- Stack: Next.js App Router, TypeScript, Tailwind CSS, Supabase (PostgreSQL, Auth, Realtime y RLS), Android Kotlin y Vercel.
 
-## 2. Roles y permisos
+## Roles y cuentas
 
-| Rol | Dónde trabaja | Permisos y responsabilidades |
-|---|---|---|
-| Administrador | Web | Tiene las funciones de Central; crea metas diarias y gestiona usuarios y droguerías. |
-| Gerente | Web | Tiene los permisos de Central y puede consultar el historial de Central. |
-| Central (Central 1 y Central 2) | Web | Ve todos los pedidos; puede editar mensajero, precio, barrio y dirección; cancelar y reasignar pedidos retrasados; recibe alertas. |
-| Droguería | Web | Publica pedidos de su propia droguería, ve solo sus pedidos y recibe notificación cuando se entregan. |
-| Call Center | Web | Publica pedidos, elige a qué droguería asignarlos, ve todos los pedidos y recibe notificación cuando se entregan. Es el único rol que elige la droguería al publicar. |
-| Domiciliario | App nativa Android (Kotlin) | Puede conectarse y desconectarse para controlar si recibe nuevas ofertas; además acepta pedidos, lleva varios a la vez, libera pedidos, marca entregas y consulta su meta y ganancias. |
+Los roles definidos para el modelo actual son Administrador, Central, Call Center, Droguería y Domiciliario. Cada perfil tiene un único rol. Supabase Auth administra correo, contraseña y verificación; `PERFILES.id` es el mismo UUID que `auth.users.id`. No se duplica correo ni contraseña en la tabla de perfiles.
 
-## 3. Flujo de un pedido (MVP)
+La información del perfil propio incluye nombre completo, teléfono, dirección, ciudad, rol y estado de cuenta. El correo debe ser válido y verificado en Auth. Las personas tienen sus propias cuentas; no se comparten credenciales.
 
-1. Droguería o Call Center publica un pedido con cliente, teléfono, dirección, barrio y valor. Si lo publica Call Center, el origen indica **“Call Center — recoger en [droguería]”** y el domiciliario recoge allí.
-2. El pedido aparece en Central y en los celulares de domiciliarios disponibles como `pendiente`.
-3. El primer domiciliario que lo acepta se lo queda; deja de aparecer para los demás. Puede ver nombre, teléfono, dirección y punto de recogida.
-4. Central y quien publicó el pedido ven el estado `aceptado`.
-5. Central puede editar el pedido en cualquier momento. Cada cambio queda en el historial.
-6. El domiciliario marca `en_entrega` al iniciar y `entregado` al finalizar.
-7. Al entregar, Central ve la fila en azul y no recibe notificación. La droguería de origen y Call Center sí reciben notificación.
-8. Si el domiciliario libera el pedido, este no se ofrece a otros domiciliarios. Aparece únicamente para Central como `retrasado`, para reasignarlo o resolverlo por otro medio.
-9. Solo Central y Administrador pueden cancelar pedidos.
+El Administrador crea entidades operativas y sus cuentas principales. Las cuentas principales también pueden realizar las funciones operativas de su rol y administrar las autorizaciones de su personal. Los perfiles `PENDIENTE` y `ACTIVA` están definidos para el flujo de alta; estados adicionales como bloqueado o suspendido requieren decisión. El rechazo se registra en la solicitud correspondiente, no como estado del perfil.
 
-Estados: `pendiente → aceptado → en_entrega → entregado`, además de `cancelado`, `retrasado` y `externo`.
+### Autorizaciones y jornada
 
-### Disponibilidad del domiciliario
+- Un empleado de droguería recibe autorización una vez. Después puede trabajar en cualquier droguería activa registrada, sin limitarse a una empresa.
+- Al iniciar jornada, el empleado elige la droguería activa donde trabajará. La elección se conserva en la jornada y sirve para atribuir sus acciones.
+- `EMPRESAS` y `empresa_id` preparan una ampliación futura. No restringen ahora rotación, selección de droguería ni recogida.
+- Domiciliarios pueden registrarse con correo verificado mientras su solicitud está pendiente. No pueden operar hasta que Central o Administrador la apruebe. La verificación del correo y la aprobación son procesos distintos.
+- Se identifica una cuenta principal por entidad mediante `AUTORIZACIONES.es_principal`.
 
-El Domiciliario puede conectarse para aparecer disponible y recibir nuevas ofertas, o desconectarse para dejar de recibirlas. Qué ocurre con los pedidos que ya aceptó cuando se desconecta queda pendiente de definir; no se debe asumir que se cancelan o liberan automáticamente.
+## Pedidos y operación
 
-## 4. Reglas del MVP
+Call Center crea pedidos y elige la droguería de recogida. Droguería crea pedidos asociados a la entidad elegida para su jornada. Se conservan entidad de origen, droguería de recogida, barrio, dirección, estado, modalidad y marcas de tiempo.
 
-### Retrasos y alertas
+Estados del pedido: `PENDIENTE`, `ACEPTADO`, `EN_ENTREGA`, `ENTREGADO` y `CANCELADO`. La demora es una condición calculada a partir de `disponible_desde`, no un estado. La modalidad es un dato aparte: `INTERNA` o `EXTERNA`. Un pedido externo es coordinado por Central con otra empresa, fuera de la aplicación o de sus domiciliarios; no es un estado.
 
-El semáforo se calcula con `created_at`; no se almacena como dato independiente. Las bandas definidas son verde (0–3 minutos), verde claro (3–5), naranja (5–10) y rojo (desde 10 minutos). Se muestra en la web y en la app nativa Android del Domiciliario. Cuando el pedido lleva cinco minutos en rojo (minuto 15), Central recibe una alerta para asignarlo con urgencia.
+El domiciliario acepta el pedido, recoge con un código que no se expone antes de la validación de la droguería y marca la entrega. Si libera antes de recoger, el pedido vuelve a estar disponible para otros domiciliarios y su reloj se reinicia. Si ya recogió el paquete, contacta a Central; no se libera automáticamente. El domiciliario puede solicitar cancelación, pero no cancelarla directamente. Droguería revisa solicitudes y Central puede cancelar directamente, dejando constancia.
 
-### Metas
+Cada asignación queda conservada con aceptaciones, liberaciones, asignador o reasignador y tiempos. Puede haber varios intentos durante el ciclo de un pedido.
 
-Solo el Administrador define la meta diaria, general o individual por domiciliario (por ejemplo, 10, 20 o 30 domicilios). Es una meta de cantidad, no un pago. El domiciliario ve cuántos lleva, cuántos faltan y mensajes como “Meta cumplida” o “Meta superada”.
+## Tiempo, historial y notificaciones
 
-### Tiempo real e historial
+El reloj crítico parte de `disponible_desde`: comienza al crear el pedido y se reinicia cuando una liberación lo vuelve a ofrecer. A los diez minutos sin asignación se marca crítico y se avisa a Central. El historial debe permitir reconstruir cambios, asignaciones y eventos.
 
-Los cambios de estado se reflejan en pantalla con Supabase Realtime. Cada cambio del pedido se registra con hora y usuario.
+El historial es de solo inserción: guarda actor, entidad activa cuando corresponda, acción, estados anterior y nuevo, motivo y hora. Las notificaciones se pueden vincular a un pedido o a una solicitud de domiciliario; la relación con el pedido puede ser nula.
 
-## 5. Fuera del MVP
+## Entregas externas, devoluciones y anexos
 
-Se reserva para una fase posterior: GPS y mapas, asignación por zona, regla del 25 % de apoyo en pedidos rojos, deudas del domiciliario con plazo de 4 horas, reportes avanzados, 2FA, auditoría avanzada, notificaciones push con la aplicación cerrada, optimización de rutas y calificaciones.
+Central registra entregas de terceros con `modalidad_entrega = EXTERNA`, sus datos y quién la coordinó. Al confirmar la llegada al cliente, el pedido pasa a entregado. La entrega externa se vincula al pedido y a su historial.
 
-## 6. Pendientes por definir
+Las devoluciones guardan por separado quién devuelve, quién recibe, entidad receptora, motivo y hora. Los anexos guardan descripción, cantidad y droguería de recogida. Para el cálculo de metas, cada domicilio completado cuenta una unidad y cada anexo dos unidades, conforme al acuerdo actual.
 
-- Si se paga al domiciliario cuando el cliente cancela estando ya en camino.
-- El límite máximo de tiempo en rojo antes de una acción automática adicional.
-- Qué ocurre con los pedidos ya aceptados si el Domiciliario se desconecta.
+## Metas y reportes
 
-No inventar una regla para estos puntos: documentar la decisión cuando el responsable del proyecto la defina.
+La meta es global y compartida por los domiciliarios. Cada cambio crea una versión con cantidad objetivo, valor por día cumplido, fecha de inicio, fecha final opcional y Administrador que la definió. Se cierra la vigencia previa cuando inicia la siguiente. No se registran deudas ni pagos; el reporte se calcula contando días que alcanzaron la meta y multiplicándolos por el valor configurado.
 
-## 7. Tecnologías decididas
+Está pendiente decidir si pedidos completados por una empresa externa cuentan para la meta de un domiciliario de la aplicación. No aplicar esa regla en SQL hasta definirla.
 
-- Next.js (App Router), TypeScript y Tailwind CSS.
-- Supabase: PostgreSQL, Auth, Realtime y Row Level Security (RLS).
-- Cliente Supabase con `@supabase/supabase-js` y `@supabase/ssr`.
-- App nativa Android del Domiciliario desarrollada en Kotlin y distribuida en Google Play.
-- Despliegue en Vercel y código en GitHub.
+## Entidades y empresas
 
-No cambiar el stack sin consultar. No agregar librerías o tecnologías nuevas sin explicar por qué y pedir autorización.
+`ENTIDADES_OPERATIVAS` representa Droguería, Central y Call Center. Una entidad puede tener `empresa_id` nulo; Central puede ser compartida por la plataforma. `EMPRESAS` permite registrar la estructura futura, pero no activa reglas de pertenencia.
 
-## 8. Base de datos y seguridad
+No aplicar restricciones entre empresas en esta versión. La rotación de personal autorizado entre droguerías es libre. Si más adelante se acuerdan límites por empresa, se añadirán validaciones, permisos RLS y/o funciones correspondientes.
 
-El esquema funcional previsto está en `database/schema_mvp_domicilios.sql`. Incluye las tablas `drogerias`, `perfiles`, `pedidos`, `historial`, `notificaciones` y `metas`. Las acciones del domiciliario se implementan como funciones SQL atómicas: `aceptar_pedido`, `liberar_pedido`, `avanzar_pedido` y `progreso_hoy`.
+## Seguridad y modelo de datos
 
-La seguridad se aplica con RLS para que cada rol acceda solo a los datos permitidos. No omitir RLS ni usar una clave secreta en el navegador. El esquema y el código se incorporarán en etapas posteriores; esta estructura documental no los crea.
+El modelo conceptual y el diccionario están en [`modelo-entidad-relacion.md`](modelo-entidad-relacion.md) y [`docs/base-datos/diccionario-datos.md`](docs/base-datos/diccionario-datos.md). `AUTH_USERS` representa Supabase Auth y no es una tabla propia. Aplicar RLS según rol y no exponer claves secretas en el navegador.
 
-## 9. Módulos previstos
+Las migraciones PostgreSQL se guardan en `database/migrations/` y se explican antes de ejecutarlas. La primera migración cubre perfiles, entidades operativas y autorizaciones.
 
-- Autenticación y perfiles por rol.
-- Administración de usuarios, droguerías y metas.
-- Panel de Central: pedidos, edición, cancelación, retrasos, reasignación, alertas e historial.
-- Portal de Droguería: publicar pedidos propios y consultar su estado.
-- Portal de Call Center: publicar pedidos, escoger droguería y consultar todos los pedidos.
-- App nativa Android del Domiciliario (Kotlin): conectarse/desconectarse, pedidos disponibles, aceptación, entregas, liberación y progreso de meta.
-- Capa de datos Supabase: persistencia, funciones atómicas, RLS y Realtime.
+El registro de decisiones y dudas está en [`docs/decisiones/dudas-y-decisiones.md`](docs/decisiones/dudas-y-decisiones.md). Si hay diferencia con archivos antiguos, prevalecen los acuerdos vigentes de ese registro y este contexto; las recomendaciones aún no son reglas aprobadas.
 
-## 10. Estado actual
+## Pendientes de producto
 
-- **Etapa:** 1 — Preparación.
-- **Hecho:** definición de roles y flujo, demo visual HTML, esquema SQL y guía de arranque; repositorio clonado localmente y documentación inicial preparada.
-- **Pendiente de publicación:** los archivos iniciales aún no se han enviado a GitHub. No hacer `push` sin autorización explícita.
-- **Siguiente etapa de producto:** Etapa 2 — Login y roles.
+- Definir hora de cierre automático de jornadas y si Central/Call Center usan jornadas.
+- Definir los estados adicionales de cuenta, si hacen falta, y cómo se incorporan empleados de Central/Call Center.
+- Definir el máximo de integrantes de Central y Call Center y si incluye a la cuenta principal. No imponer límite SQL todavía.
+- Definir si una entrega externa cuenta para la meta de un domiciliario de la aplicación.
+- Definir atribución de meta si un domiciliario distinto termina un pedido después de la recogida.
+- Definir conteo de anexos (por registro o por cantidad), además de validar el +2 acordado.
+- Confirmar zona horaria y hora de corte para reportes diarios. Propuesta documentada: `America/Bogota`, medianoche local.
+- Definir el flujo exacto de invitación/solicitud de empleados y de establecimiento de contraseña.
+- Definir si soporte requiere conversaciones agrupadas, si se requiere folio legible de pedido y cómo manejar notificaciones de cancelación con la app cerrada.
+- Definir pago o reconocimiento cuando el cliente cancela con el domiciliario en camino.
+- Definir tiempo máximo en rojo antes de otra acción automática.
+- Definir qué ocurre con pedidos ya aceptados cuando el domiciliario se desconecta; no liberarlos automáticamente hasta acordar el flujo.
+
+## Estado actual
+
+- **Etapa:** preparación del modelo de datos antes del desarrollo de login y roles.
+- **Hecho:** acuerdos funcionales consolidados; README, contexto, diagrama, diccionario y registro de decisiones alineados; migración inicial preparada.
+- **Por hacer:** cerrar decisiones que afecten al modelo, revisar la migración con el responsable, ejecutarla en un entorno de desarrollo y continuar con solicitudes, jornadas y pedidos.
+- **GitHub:** no hacer `push` sin autorización explícita.

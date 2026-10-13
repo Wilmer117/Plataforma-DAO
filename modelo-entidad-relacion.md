@@ -5,13 +5,17 @@ Este archivo documenta el modelo conceptual de la base de datos. El diagrama est
 ## Acuerdos principales
 
 - Los roles son Administrador, Central, Call Center, Droguería y Domiciliario. Cada perfil tiene un único rol.
+- Existe una Central compartida. “Central 1” y “Central 2” son usuarios del equipo, no entidades Central distintas.
 - Supabase Auth gestiona correo, contraseña y autenticación. `PERFILES.id` referencia el usuario de Auth; no se guardan contraseñas en `PERFILES`.
 - `EMPRESAS` queda prevista para el futuro. En la primera versión no limita la rotación: el personal de droguería autorizado puede elegir cualquier droguería activa al iniciar cada jornada.
+- Los estados del pedido son `PENDIENTE`, `ACEPTADO`, `EN_ENTREGA`, `ENTREGADO` y `CANCELADO`. El retraso se calcula y no es estado. `EXTERNA` es una modalidad de entrega, no un estado.
 - La entidad escogida para la jornada se registra en `JORNADAS` y en el historial de acciones.
 - La autorización de personal de droguería se concede una vez; no restringe el lugar donde puede trabajar.
 - El reloj de retraso usa `disponible_desde`; se reinicia cuando un pedido liberado vuelve a estar disponible. A los 10 minutos se marca crítico y se avisa a Central.
 - La entrega externa es una modalidad, no un estado del pedido, y requiere su registro en `ENTREGAS_EXTERNAS`.
 - El historial de pedidos es append-only. No se guardan deudas ni pagos; el reporte se calcula.
+- Administrador hereda las funciones de Central, incluidas edición y cancelación; las acciones se registran en historial.
+- La revisión de dudas pendientes y recomendaciones está en [`docs/decisiones/dudas-y-decisiones.md`](docs/decisiones/dudas-y-decisiones.md).
 
 ## Diagrama
 
@@ -27,7 +31,7 @@ erDiagram
     %% La autorización de droguería es única y no ata al usuario a una sola droguería.
     %% Una cuenta principal por entidad: AUTORIZACIONES.es_principal.
     %% disponible_desde inicia con el pedido y se actualiza cuando vuelve a estar disponible.
-    %% Rojo y aviso a Central al cumplir 10 minutos.
+    %% El retraso se calcula desde disponible_desde; al minuto 10 se avisa a Central.
     %% modalidad_entrega = INTERNA o EXTERNA; no es un estado del pedido.
     %% Si es EXTERNA, debe existir un registro correspondiente en ENTREGAS_EXTERNAS.
     %% Historial append-only. No se guardan deudas ni pagos; el reporte se calcula.
@@ -109,7 +113,7 @@ erDiagram
         uuid drogueria_recogida_id FK
         uuid barrio_id FK
         text direccion_entrega
-        text estado
+        text estado "PENDIENTE, ACEPTADO, EN_ENTREGA, ENTREGADO o CANCELADO"
         text modalidad_entrega
         timestamptz creado_en
         timestamptz disponible_desde
