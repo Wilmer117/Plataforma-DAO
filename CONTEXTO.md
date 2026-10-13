@@ -19,7 +19,8 @@ El Administrador crea entidades operativas y sus cuentas principales. Las cuenta
 ### Autorizaciones y jornada
 
 - Un empleado de droguería recibe autorización una vez. Después puede trabajar en cualquier droguería activa registrada, sin limitarse a una empresa.
-- Al iniciar jornada, el empleado elige la droguería activa donde trabajará. La elección se conserva en la jornada y sirve para atribuir sus acciones.
+- La persona crea su cuenta individual y después la cuenta principal de su entidad la autoriza. Esto no sustituye la aprobación separada de las solicitudes de Domiciliario.
+- Droguería y Call Center usan jornadas. Al iniciar una jornada, el personal de Droguería elige cualquier droguería activa donde trabajará; la elección se conserva y sirve para atribuir sus acciones. La hora de cierre automático sigue pendiente.
 - `EMPRESAS` y `empresa_id` preparan una ampliación futura. No restringen ahora rotación, selección de droguería ni recogida.
 - Domiciliarios pueden registrarse con correo verificado mientras su solicitud está pendiente. No pueden operar hasta que Central o Administrador la apruebe. La verificación del correo y la aprobación son procesos distintos.
 - Se identifica una cuenta principal por entidad mediante `AUTORIZACIONES.es_principal`.
@@ -44,7 +45,7 @@ El historial es de solo inserción: guarda actor, entidad activa cuando correspo
 
 Central registra entregas de terceros con `modalidad_entrega = EXTERNA`, sus datos y quién la coordinó. Al confirmar la llegada al cliente, el pedido pasa a entregado. La entrega externa se vincula al pedido y a su historial.
 
-Las devoluciones guardan por separado quién devuelve, quién recibe, entidad receptora, motivo y hora. Los anexos guardan descripción, cantidad y droguería de recogida. Para el cálculo de metas, cada domicilio completado cuenta una unidad y cada anexo dos unidades, conforme al acuerdo actual.
+Las devoluciones guardan por separado quién devuelve, quién recibe, entidad receptora, motivo y hora. Los anexos guardan descripción, cantidad y droguería de recogida. Para el cálculo de metas, cada domicilio completado cuenta una unidad y cada anexo asociado suma dos unidades. El crédito de la entrega se asigna al perfil que confirma que la entregó. La entrega externa no cuenta para un domiciliario de la app hasta que se confirme esa regla.
 
 ## Metas y reportes
 
@@ -68,14 +69,13 @@ El registro de decisiones y dudas está en [`docs/decisiones/dudas-y-decisiones.
 
 ## Pendientes de producto
 
-- Definir hora de cierre automático de jornadas y si Central/Call Center usan jornadas.
-- Definir los estados adicionales de cuenta, si hacen falta, y cómo se incorporan empleados de Central/Call Center.
+- Definir hora de cierre automático de jornadas.
+- Definir los estados adicionales de cuenta, si hacen falta.
 - Definir el máximo de integrantes de Central y Call Center y si incluye a la cuenta principal. No imponer límite SQL todavía.
 - Definir si una entrega externa cuenta para la meta de un domiciliario de la aplicación.
-- Definir atribución de meta si un domiciliario distinto termina un pedido después de la recogida.
-- Definir conteo de anexos (por registro o por cantidad), además de validar el +2 acordado.
+- Aclarar si el campo `cantidad` de un anexo multiplica el conteo de dos unidades o si cada registro de anexo suma dos independientemente de esa cantidad. El acuerdo confirmado es dos unidades por anexo.
 - Confirmar zona horaria y hora de corte para reportes diarios. Propuesta documentada: `America/Bogota`, medianoche local.
-- Definir el flujo exacto de invitación/solicitud de empleados y de establecimiento de contraseña.
+- Definir el método de establecimiento de contraseña y los estados adicionales de autorización, si hacen falta.
 - Definir si soporte requiere conversaciones agrupadas, si se requiere folio legible de pedido y cómo manejar notificaciones de cancelación con la app cerrada.
 - Definir pago o reconocimiento cuando el cliente cancela con el domiciliario en camino.
 - Definir tiempo máximo en rojo antes de otra acción automática.
@@ -84,6 +84,6 @@ El registro de decisiones y dudas está en [`docs/decisiones/dudas-y-decisiones.
 ## Estado actual
 
 - **Etapa:** preparación del modelo de datos antes del desarrollo de login y roles.
-- **Hecho:** acuerdos funcionales consolidados; README, contexto, diagrama, diccionario y registro de decisiones alineados; migración inicial preparada.
+- **Hecho:** acuerdos funcionales consolidados; flujo de alta de empleados, roles con jornada, conteo de anexos y atribución de meta definidos; README, contexto, diagrama, diccionario y registro de decisiones alineados; migración inicial preparada.
 - **Por hacer:** cerrar decisiones que afecten al modelo, revisar la migración con el responsable, ejecutarla en un entorno de desarrollo y continuar con solicitudes, jornadas y pedidos.
 - **GitHub:** no hacer `push` sin autorización explícita.

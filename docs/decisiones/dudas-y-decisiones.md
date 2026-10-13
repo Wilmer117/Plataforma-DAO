@@ -2,6 +2,8 @@
 
 Este documento ordena las dudas encontradas al revisar el repositorio. Para resolver contradicciones, se toma como vigente el resumen de acuerdos que el responsable compartió en el chat el 12 de octubre de 2026. Las preguntas del documento de análisis son material para revisar, no instrucciones automáticas ni decisiones aprobadas. Las propuestas se identifican como propuestas y no deben convertirse en restricciones SQL hasta que el responsable las confirme.
 
+El responsable confirmó además que los empleados crean sus propias cuentas y luego son autorizados; Droguería y Call Center trabajan con jornadas; cada anexo vale dos domicilios; y la meta se acredita a quien confirma la entrega. Estos acuerdos están reflejados abajo y en los documentos funcionales.
+
 ## Decisiones vigentes frente a contradicciones del repositorio
 
 | Tema | Acuerdo vigente | Consecuencia documental |
@@ -22,9 +24,9 @@ Este documento ordena las dudas encontradas al revisar el repositorio. Para reso
 
 | Pregunta | Estado actual | Propuesta para decidir después |
 |---|---|---|
-| ¿A qué hora se cierra automáticamente una jornada? | Sin definir. Las jornadas de Droguería guardan inicio y cierre; no se especificó cierre automático. | Empezar con cierre manual y decidir una hora automática solo si la operación la necesita. |
+| ¿A qué hora se cierra automáticamente una jornada? | Sin definir. Droguería y Call Center usan jornadas, pero no se especificó una hora de cierre automático. | Empezar con cierre manual y decidir una hora automática solo si la operación la necesita. |
 | ¿Qué estados de cuenta hay además de pendiente y activa? | `PENDIENTE` y `ACTIVA` están claros para el alta/aprobación. El rechazo pertenece a la solicitud. Bloqueo, suspensión e inactivación de una cuenta no están definidos. | No añadir esos estados ni sus flujos a SQL hasta decidir si se necesitan y qué significan. |
-| ¿Cómo se incorporan empleados de Central y Call Center? | El Administrador crea entidades y cuentas principales; las entidades pueden autorizar a su equipo. No está decidido si un empleado crea primero su cuenta, recibe invitación o solicita acceso. | Adoptar invitación con enlace de establecimiento de contraseña por seguridad; confirmar el flujo antes de implementarlo. |
+| ¿Cómo se incorporan empleados de Central y Call Center? | Resuelto: el empleado crea su cuenta y después la cuenta principal de su entidad lo autoriza. Las cuentas principales iniciales las crea el Administrador. | El estado `PENDIENTE` de autorización impide operar hasta la aprobación. El método de contraseña inicial queda pendiente. |
 | ¿El soporte agrupa mensajes en conversaciones? | `MENSAJES_SOPORTE` representa mensajes individuales con remitente, destinatario perfil o entidad y pedido opcional. No hay regla aprobada para conversaciones agrupadas. | Mantener mensajes individuales en MVP; añadir conversación solo si se necesita contexto de varios mensajes. |
 | ¿Se reinicia el reloj al liberar? | Resuelto: sí, cuando la liberación ocurre antes de recoger y el pedido se vuelve a ofrecer. | Usar `disponible_desde` y guardar el evento de liberación en historial. |
 | ¿El máximo de cinco integrantes de Central/Call Center incluye la cuenta principal? | Sigue pendiente de la revisión anterior. No hay límite en migración ni modelo lógico. | Aclarar si son cinco en total o cinco más la cuenta principal antes de crear una regla SQL. |
@@ -35,15 +37,15 @@ Este documento ordena las dudas encontradas al revisar el repositorio. Para reso
 
 | Pregunta | Estado actual | Propuesta para decidir después |
 |---|---|---|
-| ¿Cómo entran los empleados de Droguería? | La cuenta principal autoriza al empleado una vez. La autorización no limita en qué droguería activa rota. No está detallado si la cuenta se crea antes de la autorización o mediante invitación. | El empleado usa cuenta individual y la principal autoriza esa cuenta; no crear solicitud separada salvo que se quiera un flujo de autoinscripción. |
+| ¿Cómo entran los empleados de Droguería? | Resuelto: el empleado crea su cuenta y luego la principal lo autoriza una vez. Puede rotar entre todas las droguerías activas. | Mantener una autorización de personal independiente de la droguería elegida en cada jornada. |
 | ¿Qué pasa al desconectarse un domiciliario? | Desconectarse deja de ofrecerle pedidos nuevos. No hay acuerdo de liberar o cancelar pedidos que ya aceptó. | No liberar automáticamente los pedidos existentes; conservar sus asignaciones y dejar su resolución a Central hasta definir otra regla. |
 | ¿Central pertenece a una empresa? | Central es compartida y puede tener `empresa_id` nulo. | Ya representado así en el modelo; no aplicar límites de empresa. |
 | ¿Puede Administrador editar/cancelar pedidos? | Sí. Administrador tiene todas las funciones de Central, incluida edición y cancelación. Cada acción debe quedar en historial. | Hacer que el historial registre explícitamente actor y cambios. |
-| ¿Qué roles abren jornadas? | Está definido para personal de Droguería, que escoge una droguería activa al iniciar. No está definido para Central ni Call Center. | Por ahora no exigir jornadas a otros roles ni bloquear sus operaciones por esa razón. |
-| ¿Puede haber varios anexos? | El modelo permite varios registros de anexo por pedido, pero el límite no se ha fijado expresamente. El acuerdo de meta es sumar dos unidades por anexo; falta precisar si se cuenta por registro o por cantidad. | Considerar el conteo al completar la entrega; confirmar si es +2 por registro o por unidad antes de cerrar la fórmula. |
+| ¿Qué roles abren jornadas? | Resuelto: Droguería y Call Center usan jornadas. El personal de Droguería elige una droguería activa; Call Center registra su entidad autorizada. La hora de cierre automático sigue pendiente. | No exigir jornada a Central u otros roles hasta acordarlo. |
+| ¿Puede haber varios anexos y cómo cuentan? | Resuelto el valor: cada anexo suma dos domicilios. El modelo permite varios anexos por pedido. Falta definir si `cantidad` multiplica el conteo o solo describe el contenido del anexo. | Acreditar el conteo cuando se confirma la entrega y fijar la relación con `cantidad` antes de implementar la fórmula. |
 | ¿Anexos tienen código de recogida propio? | No se definió un código separado. El flujo describe código de recogida del pedido. | Reutilizar la validación del pedido completo; no crear un segundo código sin necesidad confirmada. |
 | ¿Devoluciones guardan pagos o deudas? | No. Pagos y deudas están fuera del modelo actual. Se guardan quién devuelve, quién recibe, dónde, motivo y hora. | Mantener la tabla de devoluciones sin campos monetarios. |
-| ¿Quién recibe crédito de meta si otro domiciliario termina tras una recogida? | Se conservan todos los intentos de asignación; falta definir el crédito en esa reasignación. Las entregas externas no cuentan para un domiciliario de la app, pendiente de confirmar en contexto. | Atribuir el domicilio al perfil que confirma la entrega interna, pero confirmarlo antes de implementar el cálculo. |
+| ¿Quién recibe crédito de meta si otro domiciliario termina tras una recogida? | Resuelto: el crédito corresponde al perfil que confirma la entrega. Se conservan todos los intentos de asignación. Si la entrega es externa, su conteo para la meta de un domiciliario sigue pendiente. | La función de progreso debe atribuir el pedido al perfil que realizó y confirmó la entrega interna. |
 | ¿Hay alerta sonora de cancelación con la app cerrada? | Las notificaciones push con la app cerrada están fuera del MVP; no se puede prometer una alerta sonora en ese escenario. | Notificación dentro de la app cuando esté activa; decidir si esa limitación es aceptable. No incorporar FCM sin aprobar alcance/tecnología. |
 | ¿Cómo establece contraseña la cuenta principal? | Cada persona tiene credenciales propias; no se comparten ni se guardan contraseñas en `PERFILES`. El mecanismo inicial no está definido. | Usar enlace de invitación/establecimiento de contraseña de Auth en vez de enviar una contraseña temporal; confirmar en el diseño de Auth. |
 | ¿Habrá número legible de pedido? | No está decidido. UUID sirve como clave interna; no existe requisito aprobado para un folio visible. | Empezar con UUID interno y añadir folio si operación o soporte lo requiere. |
@@ -60,7 +62,7 @@ Este documento ordena las dudas encontradas al revisar el repositorio. Para reso
 
 ## Próximo orden de trabajo
 
-1. Confirmar los puntos pendientes que afecten al modelo (incorporación de personal, jornadas, anexos y atribución de metas).
+1. Confirmar los pendientes restantes que afectan al modelo: cierre de jornadas, relación entre cantidad de anexos y conteo, y flujo de contraseña inicial.
 2. Actualizar el diccionario y el diagrama si una respuesta cambia una cardinalidad, campo o regla.
 3. Revisar y ejecutar la migración 0001 en Supabase de desarrollo.
 4. Diseñar las políticas RLS y los flujos de Auth antes de conectar la aplicación.

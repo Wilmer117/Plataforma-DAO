@@ -11,6 +11,8 @@ Este archivo documenta el modelo conceptual de la base de datos. El diagrama est
 - Los estados del pedido son `PENDIENTE`, `ACEPTADO`, `EN_ENTREGA`, `ENTREGADO` y `CANCELADO`. El retraso se calcula y no es estado. `EXTERNA` es una modalidad de entrega, no un estado.
 - La entidad escogida para la jornada se registra en `JORNADAS` y en el historial de acciones.
 - La autorización de personal de droguería se concede una vez; no restringe el lugar donde puede trabajar.
+- El empleado crea su cuenta y después su cuenta principal lo autoriza. Droguería y Call Center usan jornadas; en Droguería se elige libremente una sede activa.
+- Cada anexo suma dos unidades al conteo de domicilios, y el crédito de la entrega corresponde al perfil que confirma haberla entregado.
 - El reloj de retraso usa `disponible_desde`; se reinicia cuando un pedido liberado vuelve a estar disponible. A los 10 minutos se marca crítico y se avisa a Central.
 - La entrega externa es una modalidad, no un estado del pedido, y requiere su registro en `ENTREGAS_EXTERNAS`.
 - El historial de pedidos es append-only. No se guardan deudas ni pagos; el reporte se calcula.

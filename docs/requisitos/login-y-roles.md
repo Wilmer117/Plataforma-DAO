@@ -42,11 +42,11 @@ Permitir que cada usuario ingrese a la plataforma con su cuenta y acceda únicam
 
 - El Administrador crea las entidades operativas y sus cuentas principales.
 - Cada persona tiene su cuenta y credenciales individuales; no se comparten contraseñas.
-- La cuenta principal de una entidad puede autorizar al personal de su equipo. La autorización de Droguería se concede una vez y no restringe la rotación entre droguerías activas.
+- Los empleados crean su propia cuenta y luego la cuenta principal de su entidad los autoriza. La autorización de Droguería se concede una vez y no restringe la rotación entre droguerías activas.
 - Los domiciliarios pueden registrarse con correo verificado mientras su solicitud queda pendiente.
 - Central o Administrador revisan y aprueban la solicitud del domiciliario. Hasta la aprobación, no puede operar.
 - La verificación del correo y la aprobación de la solicitud son procesos distintos.
-- El mecanismo exacto de invitación o solicitud para personal de Central/Call Center y Droguería sigue pendiente; consultar [`dudas-y-decisiones.md`](../decisiones/dudas-y-decisiones.md).
+- El método para establecer la contraseña inicial sigue pendiente; consultar [`dudas-y-decisiones.md`](../decisiones/dudas-y-decisiones.md).
 
 ## Método de acceso
 

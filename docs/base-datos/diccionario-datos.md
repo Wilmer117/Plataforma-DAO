@@ -88,6 +88,8 @@ Una cuenta principal también trabaja con el rol operativo de la entidad. La aut
 | iniciada_en | timestamptz | Sí | `now()` |
 | finalizada_en | timestamptz | No | Nulo mientras abierta; una jornada abierta por perfil |
 
+Las jornadas se usan para personal de Droguería y Call Center. En Droguería, `entidad_activa_id` es la droguería elegida libremente para esa jornada; en Call Center, es su entidad Call Center autorizada. El cierre automático todavía no tiene hora definida.
+
 ### BARRIOS
 
 | Campo | Tipo | Obligatorio | Clave/regla |
@@ -192,7 +194,7 @@ El código de recogida se valida sin exponerse al domiciliario antes de la recog
 | cantidad | integer | Sí | Mayor que cero |
 | creado_en | timestamptz | Sí | `now()` |
 
-En el cálculo de meta, cada anexo suma dos unidades según el acuerdo actual.
+En el cálculo de meta, cada registro de anexo suma dos unidades. El perfil que confirma la entrega recibe el crédito del pedido. Está pendiente definir si el campo `cantidad` multiplica las dos unidades o solo describe el contenido del anexo.
 
 ### HISTORIAL_PEDIDO
 
@@ -236,6 +238,7 @@ Debe referenciar al menos un pedido o solicitud; la aprobación de domiciliario 
 | creada_en | timestamptz | Sí | `now()` |
 
 Las vigencias no se solapan y se cierra la anterior al crear la siguiente versión.
+El conteo se asigna al perfil que confirma la entrega. Un pedido completado por terceros queda fuera de este cálculo hasta que se defina lo contrario.
 
 ### MENSAJES_SOPORTE
 
